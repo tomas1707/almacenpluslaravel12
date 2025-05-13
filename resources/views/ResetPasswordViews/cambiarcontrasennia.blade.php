@@ -174,7 +174,7 @@
 
 
             //Arroba if es una sentencia de laravel y verifica la existencia de la session flash
-            //que proviene de la función store del RegisterController
+            //que proviene de la función store del ApiUserController
             @if (session('sessionCambiarContrasennia') == 'false')
             //Código Java Script para activar el mensaje Toast
             Toast.fire({

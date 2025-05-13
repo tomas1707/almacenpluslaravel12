@@ -2,25 +2,25 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\api\RegisterController;
-use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\ApiUserController;
+use App\Http\Controllers\api\ApiAuthController;
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [ApiAuthController::class, 'login']);
+Route::post('/register', [ApiAuthController::class, 'register']);
 
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', [AuthController::class, 'user']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [ApiAuthController::class, 'user']);
+    Route::post('/logout', [ApiAuthController::class, 'logout']);
 });
 
 
 //Route::prefix('/usuario')->middleware('auth:sanctum')->group(function () {
 Route::prefix('/usuario')->group(function () {
-    /*Paso 4*/Route::get('/', [RegisterController::class, 'index']);
-    /*Paso 4*/Route::get('/show', [RegisterController::class, 'show']);
-    /*Paso 5*/Route::post('/', [RegisterController::class, 'store']);
-    /*Paso 6*/Route::put('/{user}', [RegisterController::class, 'update']);
-    /*Paso 6*/Route::patch('/{user}', [RegisterController::class, 'updatePartial']);
-    /*Paso 7*/Route::delete('/{user}', [RegisterController::class, 'destroy']);
+    /*Paso 4*/Route::get('/', [ApiUserController::class, 'index']);
+    /*Paso 4*/Route::get('/show', [ApiUserController::class, 'show']);
+    /*Paso 5*/Route::post('/', [ApiUserController::class, 'store']);
+    /*Paso 6*/Route::put('/{user}', [ApiUserController::class, 'update']);
+    /*Paso 6*/Route::patch('/{user}', [ApiUserController::class, 'partialUpdate']);
+    /*Paso 7*/Route::delete('/{user}', [ApiUserController::class, 'destroy']);
 });
