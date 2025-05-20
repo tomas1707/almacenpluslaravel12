@@ -20,7 +20,7 @@ class AuthController extends Controller
         $usuario = $request->usuario;
         $pass = $request->contrasennia;
 
-        $resUsuario = DB::connection('mysql')->
+        $resUsuario = DB::connection('MySql2_LaragonLocal')->
         table('usuarios')
             ->select('id', 'nombre_completo', 'contrasennia', 'activo')
             ->where('nombre_usuario', '=', $usuario)

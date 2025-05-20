@@ -21,7 +21,7 @@ class ResetPasswordController extends Controller
     public function showResetFormWithToken($token){
 //        echo $token;
         try{
-            $res=DB::connection('mysql')
+            $res=DB::connection('MySql2_LaragonLocal')
                 ->table("usuarios")
                 ->select("token_expiracion")
                 ->where("token_recuperacion","=",$token)
@@ -68,7 +68,8 @@ class ResetPasswordController extends Controller
         $correo=$request->correo;
 
         try{
-            $res=DB::table('usuarios')
+            $res=DB::connection('MySql2_LaragonLocal')
+            ->table('usuarios')
                 ->select("id","nombre_completo","activo")
                 ->where("correo_electronico","=",$correo)
                 ->first();
@@ -148,7 +149,7 @@ class ResetPasswordController extends Controller
 //        echo "Token= $token   Contraseña= $contrasennia";
 
         try{
-            DB::connection('mysql')
+            DB::connection('MySql2_LaragonLocal')
                 ->table('usuarios')
                 ->where('token_recuperacion', $token)
                 ->update([
