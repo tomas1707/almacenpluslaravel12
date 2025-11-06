@@ -13,7 +13,8 @@ class HomeController extends Controller
 //    }
 
     public function __invoke(){
-    return view("welcome");
+    //return view("login");
+    return redirect()->route('login');
 
         //$roles = DB::select('SELECT * FROM roles WHERE id = ?', [$id]);
         //DB::insert('INSERT INTO roles (nombre_rol) VALUES (?)', ['Residente']);

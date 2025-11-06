@@ -62,6 +62,8 @@ class Usuario extends Model
     }
 
     //*******************************************************************************************
+    //*************************************  Funciones  *****************************************
+    //*******************************************************************************************
 
     public function getAllUsuarios():JsonResponse{
         $resUsaurio=null;
@@ -97,7 +99,6 @@ class Usuario extends Model
 
             Log::emergency ('No se pudo conectar con el servidor de base de datos', [
                 'message' => 'Error con la consula',
-                'category' => 'server',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -128,6 +129,7 @@ class Usuario extends Model
             $status=404;
 
             $data=[
+                'data'=>null,
                 'message' => 'No se encontraron usuarios registrados',
                 'status'=>$status
             ];
@@ -161,7 +163,6 @@ class Usuario extends Model
 
             Log::emergency ('Error en la conexión de base de datos', [
                 'message' => 'Hubo un error con la conexión al servicio de base de datos',
-                'category' => 'server',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -179,7 +180,6 @@ class Usuario extends Model
 
             Log::emergency ('Error en la conexión con sl servicio de datos', [
                 'message' => 'Error en la conexión con el servidor MySQL',
-                'category' => 'server',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -196,7 +196,6 @@ class Usuario extends Model
 
             Log::emergency ('No se pudo conectar con el servidor de base de datos', [
                 'message' => 'Error con la consulta',
-                'category' => 'server',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -216,7 +215,6 @@ class Usuario extends Model
 
             Log::info('Muestra los datos del usuario solicitado', [
                 'message' => 'Muestra los datos del usuario solicitado',
-                'category' => 'data base',
                 'exception' => 'null',
                 'status' => $status
             ]);
@@ -228,13 +226,13 @@ class Usuario extends Model
             $status=404;
 
             $data=[
-                'message' => 'No se encontró registro del id compartido',
+                'data'=>null,
+                'message' => 'No se encontró el id '.$id,
                 'status'=>$status
             ];
 
-            Log::error('No se encontró registro del id compartido', [
-                'message' => 'No se encontró registro del id compartido',
-                'category' => 'data base',
+            Log::error('No se encontró el id '.$id, [
+                'message' => 'No se encontró el id '.$id,
                 'exception' => 'null',
                 'status' => $status
             ]);
@@ -244,7 +242,26 @@ class Usuario extends Model
 
     }
 
-    public function crateUsaurio($jsonRequest):JsonResponse{
+    public function crateUsuario($jsonRequest):JsonResponse{
+        $user=Usuario::where('correo_electronico', $jsonRequest['correo_electronico'])->first();
+
+        if ($user) {
+            $status=400;
+            $data = [
+                'data'=>null,
+                'message' => 'El correo ya existe',
+                'status' => $status
+            ];
+
+            Log::error('El correo ya existe', [
+                'message' => 'El correo ya existe',
+                'exception' => 'null',
+                'status' => $status
+            ]);
+
+            return response()->json($data, $status);
+        }
+
         $status=500;
         try {
             $resUsuario = Usuario::create([
@@ -261,14 +278,13 @@ class Usuario extends Model
                 $status=201;
 
                 $data = [
-                    'Usuario' => $resUsuario,
+                    'data' => $resUsuario,
                     'message' => 'Usuario creado correctamente',
                     'status' => $status,
                 ];
 
                 Log::info('Usuario creado', [
                     'message' => 'Usuario creado',
-                    'category' => 'data base',
                     'exception' => 'null',
                     'status' => $status
                 ]);
@@ -277,13 +293,13 @@ class Usuario extends Model
             } else {
                 $status=400;
                 $data = [
+                    'data'=>null,
                     'message' => 'Error al crear el usuario', // Mensaje de error genérico al crear el usuario.
                     'status' => $status, // Código de estado HTTP 500 (Internal Server Error) indicando un problema del lado del servidor.
                 ];
 
                 Log::error('Error al crear el usuario en la base de datos', [
                     'message' => 'Error al crear el usuario en la base de datos',
-                    'category' => 'data base',
                     'exception' => 'null',
                     'status' => $status
                 ]);
@@ -294,13 +310,14 @@ class Usuario extends Model
             // Captura excepciones relacionadas con la base de datos (por ejemplo, violación de clave única no capturada por la validación).
 
             $data = [
+                'data'=>null,
                 'message' => 'Error de base de datos al crear usuario', // Mensaje de error genérico al crear el usuario.
                 'status' => $status, // Código de estado HTTP 500 (Internal Server Error) indicando un problema del lado del servidor.
+                'exception' => $e->getMessage()
             ];
 
             Log::critical('Error de base de datos al crear usuario', [
                 'message' => 'Error de base de datos al crear usuario',
-                'category' => 'data base',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -310,13 +327,13 @@ class Usuario extends Model
             // Captura otras excepciones inesperadas que puedan ocurrir durante el proceso.
 
             $data = [
+                'data'=>null,
                 'message' => 'Error de base de datos al crear usuario', // Mensaje de error genérico al crear el usuario.
                 'status' => $status, // Código de estado HTTP 500 (Internal Server Error) indicando un problema del lado del servidor.
             ];
 
             Log::critical('Error inesperado al crear usuario:', [
                 'message' => 'Error inesperado al crear usuario:',
-                'category' => 'data base',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -335,27 +352,28 @@ class Usuario extends Model
             if ($usuario) {
                 // Actualiza los campos necesarios
 
+
+                $usuario->nombre_completo = $jsonRequest['nombre_completo'];
                 $usuario->nombre_usuario = $jsonRequest['nombre_usuario'];
                 $usuario->correo_electronico = $jsonRequest['correo_electronico'];
+                $usuario->contrasennia = Hash::make($jsonRequest['contrasennia']);
 
-                // Solo actualiza la contraseña si viene en la solicitud
-                if (!empty($jsonRequest['contrasennia'])) {
-                    $usuario->contrasennia = Hash::make($jsonRequest['contrasennia']);
-                }
+                $usuario->activo = $jsonRequest['activo'];
+                $usuario->rol_id = $jsonRequest['rol_id'];
+
 
                 // Guardar los cambios
                 $usuario->save();
 
                 $status = 200;
                 $data = [
-                    'Usuario' => $usuario,
+                    'data' => $usuario,
                     'message' => 'Usuario actualizado correctamente',
                     'status' => $status,
                 ];
 
                 Log::info('Usuario actualizado', [
                     'message' => 'Usuario actualizado',
-                    'category' => 'data base',
                     'exception' => 'null',
                     'status' => $status
                 ]);
@@ -370,7 +388,6 @@ class Usuario extends Model
 
                 Log::warning('Usuario no encontrado para actualizar', [
                     'message' => 'Usuario no encontrado para actualizar',
-                    'category' => 'data base',
                     'exception' => 'null',
                     'status' => $status
                 ]);
@@ -379,13 +396,13 @@ class Usuario extends Model
             }
         } catch (QueryException $e) {
             $data = [
+                'data'=>null,
                 'message' => 'Error de base de datos al actualizar usuario',
                 'status' => $status,
             ];
 
             Log::critical('Error de base de datos al actualizar usuario', [
                 'message' => 'Error de base de datos al actualizar usuario',
-                'category' => 'data base',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -393,13 +410,13 @@ class Usuario extends Model
             return response()->json($data, $status);
         } catch (\Exception $e) {
             $data = [
+                'data'=>null,
                 'message' => 'Error inesperado al actualizar usuario',
                 'status' => $status,
             ];
 
             Log::critical('Error inesperado al actualizar usuario', [
                 'message' => 'Error inesperado al actualizar usuario',
-                'category' => 'data base',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -417,30 +434,34 @@ class Usuario extends Model
 
             if ($usuario) {
                 // Actualiza los campos necesarios
-                $usuario->nombre_completo = $jsonRequest['nombre_completo'];
                 $usuario->nombre_usuario = $jsonRequest['nombre_usuario'];
                 $usuario->correo_electronico = $jsonRequest['correo_electronico'];
 
                 // Solo actualiza la contraseña si viene en la solicitud
-                if (!empty($jsonRequest['contrasennia'])) {
+                if (!empty($jsonRequest['contrasennia']))
                     $usuario->contrasennia = Hash::make($jsonRequest['contrasennia']);
-                }
-                $usuario->activo = $jsonRequest['activo'];
-                $usuario->rol_id = $jsonRequest['rol_id'];
+
+                if (!empty($jsonRequest['nombre_completo']))
+                    $usuario->nombre_completo = $jsonRequest['nombre_completo'];
+
+                if (!empty($jsonRequest['rol_id']))
+                    $usuario->rol_id = $jsonRequest['rol_id'];
+
+                if (!empty($jsonRequest['activo']))
+                    $usuario->activo = $jsonRequest['activo'];
 
                 // Guardar los cambios
                 $usuario->save();
 
                 $status = 200;
                 $data = [
-                    'Usuario' => $usuario,
+                    'data' => $usuario,
                     'message' => 'Usuario actualizado correctamente',
                     'status' => $status,
                 ];
 
                 Log::info('Usuario actualizado', [
                     'message' => 'Usuario actualizado',
-                    'category' => 'data base',
                     'exception' => 'null',
                     'status' => $status
                 ]);
@@ -455,7 +476,6 @@ class Usuario extends Model
 
                 Log::warning('Usuario no encontrado para actualizar', [
                     'message' => 'Usuario no encontrado para actualizar',
-                    'category' => 'data base',
                     'exception' => 'null',
                     'status' => $status
                 ]);
@@ -464,13 +484,13 @@ class Usuario extends Model
             }
         } catch (QueryException $e) {
             $data = [
+                'data'=>null,
                 'message' => 'Error de base de datos al actualizar usuario',
                 'status' => $status,
             ];
 
             Log::critical('Error de base de datos al actualizar usuario', [
                 'message' => 'Error de base de datos al actualizar usuario',
-                'category' => 'data base',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -478,13 +498,13 @@ class Usuario extends Model
             return response()->json($data, $status);
         } catch (\Exception $e) {
             $data = [
+                'data'=>null,
                 'message' => 'Error inesperado al actualizar usuario',
                 'status' => $status,
             ];
 
             Log::critical('Error inesperado al actualizar usuario', [
                 'message' => 'Error inesperado al actualizar usuario',
-                'category' => 'data base',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -508,13 +528,13 @@ class Usuario extends Model
 
                 $status = 200;
                 $data = [
-                    'message' => 'Usuario eliminado correctamente',
+                    'data'=>null,
+                    'message' => 'Usuario con el id '.$id.' eliminado correctamente',
                     'status' => $status
                 ];
 
                 Log::info('Usuario eliminado', [
                     'message' => 'Usuario eliminado correctamente',
-                    'category' => 'data base',
                     'exception' => 'null',
                     'status' => $status
                 ]);
@@ -523,13 +543,13 @@ class Usuario extends Model
             } else {
                 $status = 404;
                 $data = [
-                    'message' => 'Usuario no encontrado',
+                    'data'=>null,
+                    'message' => 'Usuario con el id '.$id.' no encontrado',
                     'status' => $status
                 ];
 
                 Log::warning('Intento de eliminar usuario no encontrado', [
                     'message' => 'Usuario no encontrado para eliminar',
-                    'category' => 'data base',
                     'exception' => 'null',
                     'status' => $status
                 ]);
@@ -539,13 +559,13 @@ class Usuario extends Model
 
         } catch (QueryException $e) {
             $data = [
+                'data'=>null,
                 'message' => 'Error de base de datos al eliminar usuario',
                 'status' => $status,
             ];
 
             Log::critical('Error de base de datos al eliminar usuario', [
                 'message' => 'Error de base de datos al eliminar usuario',
-                'category' => 'data base',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);
@@ -554,13 +574,13 @@ class Usuario extends Model
 
         } catch (\Exception $e) {
             $data = [
+                'data'=>null,
                 'message' => 'Error inesperado al eliminar usuario',
                 'status' => $status,
             ];
 
             Log::critical('Error inesperado al eliminar usuario', [
                 'message' => 'Error inesperado al eliminar usuario',
-                'category' => 'data base',
                 'exception' => $e->getMessage(),
                 'status' => $status
             ]);

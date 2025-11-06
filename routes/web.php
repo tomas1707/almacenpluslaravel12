@@ -10,9 +10,15 @@ use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MovimientoController;
+use App\Http\Controllers\VentasController;
 
 //Route::get('/', [HomeController::class, 'index']);
 Route::get('/', HomeController::class);
+
+//Route::get('/ventas', function () {
+//    return view('ventas');
+//});
+Route::get('/ventas',[VentasController::class,'index']);
 
 Route::get("/pruebas", function(){
     return view("blank");

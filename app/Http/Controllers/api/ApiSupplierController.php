@@ -13,7 +13,7 @@ use Illuminate\Http\JsonResponse;
 
 // Importa la fachada Log para escribir en los archivos de registro
 
-class ApiUserController extends Controller
+class ApiSupplierController extends Controller
 {
     private Usuario $usuario;
     public function __construct(Usuario $usuario) //Concepto de inyeción de dependencias
